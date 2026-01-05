@@ -4,7 +4,7 @@ import { SuccessResponse, ErrorResponse } from './sellers.schemas';
 /**
  * Query params reales de Aliado
  */
-export const ContactsQuerySchema = z.object({
+export const WarrantiesQuerySchema = z.object({
   page: z.coerce.number().optional(),
   itemsPerPage: z.coerce.number().optional(),
   identification: z.string().optional(),
@@ -13,7 +13,7 @@ export const ContactsQuerySchema = z.object({
 /**
  * Modelo de Contacto (People)
  */
-export const ContactSchema = z.object({
+export const WarrantiesSchema = z.object({
   id: z.string(),
   kind: z.literal('Person'),
   identificationType: z.string(),
@@ -53,8 +53,8 @@ export const ContactSchema = z.object({
 /**
  * Response de listado
  */
-export const ContactsListResponse = SuccessResponse.extend({
-  data: z.array(ContactSchema),
+export const WarrantiesListResponse = SuccessResponse.extend({
+  data: z.array(WarrantiesSchema),
 });
 
 export {

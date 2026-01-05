@@ -32,7 +32,7 @@ export class AliadoService {
   /**
  * Obtiene la lista de garantias (people) desde Aliado
  */
-  static async getContacts(params: {
+  static async getWarranties(params: {
     page?: number;
     itemsPerPage?: number;
     identification?: string;

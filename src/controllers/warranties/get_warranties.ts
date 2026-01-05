@@ -1,11 +1,11 @@
 import { Context } from 'hono';
 import { AliadoService } from '../../services/aliado.service';
 
-export const getContacts = async (c: Context) => {
+export const getWarranties = async (c: Context) => {
   try {
     const query = c.req.query();
 
-    const data = await AliadoService.getContacts({
+    const data = await AliadoService.getWarranties({
       page: query.page ? Number(query.page) : undefined,
       itemsPerPage: query.itemsPerPage ? Number(query.itemsPerPage) : undefined,
       identification: query.identification,

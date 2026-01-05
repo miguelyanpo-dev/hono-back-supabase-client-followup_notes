@@ -1,29 +1,29 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import {
-  ContactsQuerySchema,
-  ContactsListResponse,
+  WarrantiesQuerySchema,
+  WarrantiesListResponse,
   ErrorResponse,
-} from '../schemas/contacts.schemas';
-import { getContacts } from '../controllers/contacts/get_contacts';
+} from '../schemas/warranties.schemas';
+import { getWarranties } from '../controllers/warranties/get_warranties';
 
-const contactsRouter = new OpenAPIHono();
+const WarrantiesRouter = new OpenAPIHono();
 
 // Definimos la ruta en una constante (CLAVE)
-const getContactsRoute = createRoute({
+const getWarrantiesRoute = createRoute({
   method: 'get',
   path: '/',
   tags: ['garantias de aliado'],
   summary: 'Listar garantias',
   description: 'Obtiene garantias (people) desde la API de Aliado.',
   request: {
-    query: ContactsQuerySchema,
+    query: WarrantiesQuerySchema,
   },
   responses: {
     200: {
       description: 'Lista de garantias obtenida exitosamente',
       content: {
         'application/json': {
-          schema: ContactsListResponse,
+          schema: WarrantiesListResponse,
         },
       },
     },
@@ -40,6 +40,6 @@ const getContactsRoute = createRoute({
 
 // MISMO patrón que sellers
 // @ts-expect-error - Known issue with @hono/zod-openapi type inference
-contactsRouter.openapi(getContactsRoute, getContacts);
+WarrantiesRouter.openapi(getWarrantiesRoute, getWarranties);
 
-export default contactsRouter;
+export default WarrantiesRouter;
