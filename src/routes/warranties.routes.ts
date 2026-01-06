@@ -5,7 +5,12 @@ import { createWarranty } from '../controllers/warranties/create_warranty';
 import { getWarrantyById } from '../controllers/warranties/get_warranty_by_id';
 import { updateWarranty } from '../controllers/warranties/update_warranty';
 import { deleteWarranty } from '../controllers/warranties/delete_warranty';
-import { CreateWarrantySchema, UpdateWarrantySchema } from '../schemas/warranties.schemas';
+import {
+  CreateWarrantySchema,
+  GetWarrantiesQuerySchema,
+  PaginatedWarrantiesResponseSchema,
+  UpdateWarrantySchema,
+} from '../schemas/warranties.schemas';
 import { ErrorResponse, SuccessResponse } from '../schemas/sellers.schemas';
 
 const router = new OpenAPIHono();
@@ -23,14 +28,25 @@ router.openapi(
   createRoute({
     method: 'get',
     path: '/',
+    request: {
+      query: GetWarrantiesQuerySchema,
+    },
     responses: {
       200: {
         content: {
           'application/json': {
-            schema: SuccessResponse,
+            schema: PaginatedWarrantiesResponseSchema,
           },
         },
         description: 'List warranties',
+      },
+      400: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Bad Request',
       },
       500: {
         content: {

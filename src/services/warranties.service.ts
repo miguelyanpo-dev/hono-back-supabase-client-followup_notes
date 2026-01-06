@@ -9,6 +9,72 @@ export class WarrantiesService {
     );
     return rows;
   }
+
+  static async getPaginated(filters: {
+    page: number;
+    limit: number;
+    customer_name?: string;
+    customer_identification?: string | number;
+    seller_id?: string;
+    status?: string;
+    date_start?: string;
+    date_end?: string;
+  }) {
+    const where: string[] = [];
+    const values: any[] = [];
+
+    if (filters.customer_name) {
+      values.push(`%${filters.customer_name}%`);
+      where.push(`customer_name ILIKE $${values.length}`);
+    }
+
+    if (filters.customer_identification !== undefined) {
+      values.push(String(filters.customer_identification));
+      where.push(`customer_identification = $${values.length}`);
+    }
+
+    if (filters.seller_id) {
+      values.push(filters.seller_id);
+      where.push(`seller_id = $${values.length}`);
+    }
+
+    if (filters.status) {
+      values.push(filters.status);
+      where.push(`status = $${values.length}`);
+    }
+
+    if (filters.date_start) {
+      values.push(filters.date_start);
+      where.push(`user_created_date >= $${values.length}::timestamptz`);
+    }
+
+    if (filters.date_end) {
+      values.push(filters.date_end);
+      where.push(`user_created_date <= $${values.length}::timestamptz`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const countQuery = `SELECT COUNT(*)::bigint AS total FROM warranties ${whereSql}`;
+    const countResult = await db.query(countQuery, values);
+    const total = Number(countResult.rows?.[0]?.total ?? 0);
+
+    const offset = (filters.page - 1) * filters.limit;
+    const valuesWithPaging = [...values, filters.limit, offset];
+
+    const dataQuery = `
+      SELECT *
+      FROM warranties
+      ${whereSql}
+      ORDER BY user_created_date DESC
+      LIMIT $${valuesWithPaging.length - 1}
+      OFFSET $${valuesWithPaging.length}
+    `;
+
+    const { rows } = await db.query(dataQuery, valuesWithPaging);
+    return { rows, total };
+  }
+
   static async getById(id: number) {
     const { rows } = await db.query(
       `SELECT * FROM warranties WHERE id = $1`,

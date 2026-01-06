@@ -26,3 +26,24 @@ export const UpdateWarrantySchema = CreateWarrantySchema.partial().extend({
   user_updated_name: z.string().optional(),
   user_updated_id: z.string().optional(),
 });
+
+export const GetWarrantiesQuerySchema = z.object({
+  page: z.union([z.string(), z.number()]).optional(),
+  limit: z.union([z.string(), z.number()]).optional(),
+  customer_name: z.string().optional(),
+  customer_identification: z.union([z.string(), z.number()]).optional(),
+  seller_id: z.string().optional(),
+  status: z.string().optional(),
+  date_start: z.string().optional(),
+  date_end: z.string().optional(),
+});
+
+export const PaginatedWarrantiesResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.array(z.any()),
+  data_items: z.number(),
+  page_current: z.number(),
+  page_total: z.number(),
+  have_next_page: z.boolean(),
+  have_previus_page: z.boolean(),
+});
