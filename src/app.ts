@@ -9,6 +9,14 @@ import warrantiesRouter from './routes/warranties.routes';
 const app = new Hono();
 const apiV1 = new OpenAPIHono();
 
+const redact = (value: string | undefined, opts?: { start?: number; end?: number }) => {
+  if (!value) return null;
+  const start = opts?.start ?? 6;
+  const end = opts?.end ?? 4;
+  if (value.length <= start + end) return '*'.repeat(value.length);
+  return `${value.slice(0, start)}***${value.slice(-end)}`;
+};
+
 // CORS middleware
 app.use('*', cors({
   origin: config.cors.origins,
@@ -57,6 +65,44 @@ apiV1.doc('/openapi.json', {
 
 // Swagger UI
 apiV1.get('/doc', swaggerUI({ url: '/api/v1/openapi.json' }));
+
+apiV1.get('/env', (c) => {
+  const enabled = config.env !== 'production' || process.env.ENABLE_ENV_DEBUG === 'true';
+  if (!enabled) {
+    return c.json({ success: false, error: 'Not Found' }, 404);
+  }
+
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+
+  return c.json({
+    success: true,
+    environment: config.env,
+    env: {
+      DATABASE_URL: {
+        present: Boolean(databaseUrl),
+        preview: redact(databaseUrl, { start: 10, end: 8 }),
+      },
+      DB_HOST: process.env.DB_HOST ?? null,
+      DB_PORT: process.env.DB_PORT ?? null,
+      DB_NAME: process.env.DB_NAME ?? null,
+      DB_USER: process.env.DB_USER ?? null,
+      DB_PASSWORD: {
+        present: Boolean(process.env.DB_PASSWORD?.trim()),
+        preview: redact(process.env.DB_PASSWORD?.trim()),
+      },
+      PORT: process.env.PORT ?? null,
+      NODE_ENV: process.env.NODE_ENV ?? null,
+      PRODUCTION_URL: process.env.PRODUCTION_URL ?? null,
+      CORS_ORIGIN: process.env.CORS_ORIGIN ?? null,
+      ALIADO_API_URL: process.env.ALIADO_API_URL ?? null,
+      ALIADO_BEARER_TOKEN: {
+        present: Boolean(process.env.ALIADO_BEARER_TOKEN?.trim()),
+        preview: redact(process.env.ALIADO_BEARER_TOKEN?.trim()),
+      },
+      ENABLE_ENV_DEBUG: process.env.ENABLE_ENV_DEBUG ?? null,
+    },
+  });
+});
 
 // Redirect root /api/v1 to documentation
 apiV1.get('/', (c) => {
