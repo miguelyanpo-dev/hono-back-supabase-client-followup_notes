@@ -8,11 +8,20 @@ const requiredEnv = (name: string) => {
   return value;
 };
 
-export const db = new Pool({
-  host: requiredEnv('DB_HOST'),
-  port: Number(requiredEnv('DB_PORT')),
-  database: requiredEnv('DB_NAME'),
-  user: requiredEnv('DB_USER'),
-  password: requiredEnv('DB_PASSWORD'),
-  ssl: { rejectUnauthorized: false },
-});
+const databaseUrl = process.env.DATABASE_URL?.trim();
+
+export const db = new Pool(
+  databaseUrl
+    ? {
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false },
+      }
+    : {
+        host: requiredEnv('DB_HOST'),
+        port: Number(requiredEnv('DB_PORT')),
+        database: requiredEnv('DB_NAME'),
+        user: requiredEnv('DB_USER'),
+        password: requiredEnv('DB_PASSWORD'),
+        ssl: { rejectUnauthorized: false },
+      }
+);
