@@ -11,7 +11,7 @@ import {
   PaginatedWarrantiesResponseSchema,
   UpdateWarrantySchema,
 } from '../schemas/warranties.schemas';
-import { ErrorResponse, SuccessResponse } from '../schemas/sellers.schemas';
+import { ErrorResponse, SuccessResponse } from '../schemas/response.schemas';
 
 const router = new OpenAPIHono();
 

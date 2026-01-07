@@ -4,20 +4,10 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { logger } from './middlewares/logger';
 import { config } from './config/config';
-import { getDb } from './config/db';
 import warrantiesRouter from './routes/warranties.routes';
-import { lookup } from 'node:dns/promises';
 
 const app = new Hono();
 const apiV1 = new OpenAPIHono();
-
-const redact = (value: string | undefined, opts?: { start?: number; end?: number }) => {
-  if (!value) return null;
-  const start = opts?.start ?? 6;
-  const end = opts?.end ?? 4;
-  if (value.length <= start + end) return '*'.repeat(value.length);
-  return `${value.slice(0, start)}***${value.slice(-end)}`;
-};
 
 // CORS middleware
 app.use('*', cors({
@@ -30,17 +20,6 @@ app.use('*', cors({
 
 // Logger middleware
 app.use('*', logger());
-
-// Health check
-app.get('/', (c) => {
-  return c.json({ 
-    ok: true, 
-    service: 'aliado-api-proxy',
-    version: '1.0.0',
-    environment: config.env,
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Mount warranties routes
 apiV1.route('/warranties', warrantiesRouter);
@@ -65,119 +44,9 @@ apiV1.doc('/openapi.json', {
   ],
 });
 
-// Swagger UI
 apiV1.get('/doc', swaggerUI({ url: '/api/v1/openapi.json' }));
 
-apiV1.get('/env', (c) => {
-  const enabled = config.env !== 'production' || process.env.ENABLE_ENV_DEBUG === 'true';
-  if (!enabled) {
-    return c.json({ success: false, error: 'Not Found' }, 404);
-  }
-
-  const databaseUrl = process.env.DATABASE_URL?.trim();
-  const fullRequested = c.req.query('full') === 'true';
-  const allowFull =
-    config.env !== 'production'
-      ? process.env.ALLOW_ENV_FULL === 'true'
-      : fullRequested && process.env.ALLOW_ENV_FULL === 'true';
-
-  return c.json({
-    success: true,
-    environment: config.env,
-    env: {
-      DATABASE_URL: {
-        present: Boolean(databaseUrl),
-        preview: redact(databaseUrl, { start: 10, end: 8 }),
-        full: allowFull ? databaseUrl ?? null : null,
-      },
-      DB_HOST: process.env.DB_HOST ?? null,
-      DB_PORT: process.env.DB_PORT ?? null,
-      DB_NAME: process.env.DB_NAME ?? null,
-      DB_USER: process.env.DB_USER ?? null,
-      DB_PASSWORD: {
-        present: Boolean(process.env.DB_PASSWORD?.trim()),
-        preview: redact(process.env.DB_PASSWORD?.trim()),
-      },
-      PORT: process.env.PORT ?? null,
-      NODE_ENV: process.env.NODE_ENV ?? null,
-      PRODUCTION_URL: process.env.PRODUCTION_URL ?? null,
-      CORS_ORIGIN: process.env.CORS_ORIGIN ?? null,
-      ALIADO_API_URL: process.env.ALIADO_API_URL ?? null,
-      ALIADO_BEARER_TOKEN: {
-        present: Boolean(process.env.ALIADO_BEARER_TOKEN?.trim()),
-        preview: redact(process.env.ALIADO_BEARER_TOKEN?.trim()),
-      },
-      ENABLE_ENV_DEBUG: process.env.ENABLE_ENV_DEBUG ?? null,
-      ALLOW_ENV_FULL: process.env.ALLOW_ENV_FULL ?? null,
-    },
-  });
-});
-
-apiV1.get('/db/ping', async (c) => {
-  const ref = c.req.query('ref')?.trim();
-  if (ref && process.env.NODE_ENV === 'production' && process.env.ENABLE_DB_REF !== 'true') {
-    return c.json({ success: false, error: 'Not Found' }, 404);
-  }
-
-  const databaseUrl = ref
-    ? `${process.env.DATABASE_BASE ?? ''}${ref}${process.env.DOS_PUNTOS?.trim() || ':'}${process.env.DATABASE_PASSWORD ?? ''}${process.env.DATABASE_HOST ?? ''}`
-    : process.env.DATABASE_URL?.trim();
-
-  let databaseHost: string | null = null;
-  let dnsLookup: unknown = null;
-  let dnsError: string | null = null;
-  if (databaseUrl) {
-    try {
-      databaseHost = new URL(databaseUrl).hostname;
-      dnsLookup = await lookup(databaseHost, { all: true });
-      dnsError = null;
-    } catch (err) {
-      databaseHost = null;
-      dnsLookup = null;
-      dnsError = err instanceof Error ? err.message : String(err);
-    }
-  }
-
-  try {
-    const db = getDb(ref);
-    const result = await db.query('SELECT 1 as ok');
-    return c.json({
-      success: true,
-      ok: true,
-      result: result.rows?.[0] ?? null,
-      diagnostics: {
-        vercelEnv: process.env.VERCEL_ENV ?? null,
-        vercelRegion: process.env.VERCEL_REGION ?? null,
-        ref: ref ?? null,
-        databaseHost,
-        dnsLookup,
-        dnsError,
-      },
-    });
-  } catch (err) {
-    console.error('DB ping failed:', err);
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({
-      success: false,
-      ok: false,
-      error: 'DB ping failed',
-      message,
-      diagnostics: {
-        vercelEnv: process.env.VERCEL_ENV ?? null,
-        vercelRegion: process.env.VERCEL_REGION ?? null,
-        ref: ref ?? null,
-        databaseHost,
-        dnsLookup,
-        dnsError,
-      },
-    }, 500);
-  }
-});
-
-// Redirect root /api/v1 to documentation
-apiV1.get('/', (c) => {
-  return c.redirect('/api/v1/doc');
-});
+app.route('/api/v1', apiV1);
 
 // Mount OpenAPI routes
 app.route('/api/v1', apiV1);

@@ -4,9 +4,5 @@ export const config = {
   productionUrl: process.env.PRODUCTION_URL || 'https://hono-back-aliado-garantias.vercel.app',
   cors: {
     origins: process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || ['*']
-  },
-  aliado: {
-    apiUrl: process.env.ALIADO_API_URL || 'https://app.aliaddo.net/v1',
-    bearerToken: process.env.ALIADO_BEARER_TOKEN || ''
   }
 } as const;
