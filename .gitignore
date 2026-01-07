@@ -67,6 +67,8 @@ docker-compose.override.yml
 *.pem
 *.key
 
+src/config/secrets.local.ts
+
 # Archivos de sistema y mac
 Icon?
 ehthumbs.db

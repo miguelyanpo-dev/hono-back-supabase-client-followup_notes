@@ -4,6 +4,7 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { logger } from './middlewares/logger';
 import { config } from './config/config';
+import { db } from './config/db';
 import warrantiesRouter from './routes/warranties.routes';
 
 const app = new Hono();
@@ -73,6 +74,11 @@ apiV1.get('/env', (c) => {
   }
 
   const databaseUrl = process.env.DATABASE_URL?.trim();
+  const fullRequested = c.req.query('full') === 'true';
+  const allowFull =
+    config.env !== 'production'
+      ? process.env.ALLOW_ENV_FULL === 'true'
+      : fullRequested && process.env.ALLOW_ENV_FULL === 'true';
 
   return c.json({
     success: true,
@@ -81,6 +87,7 @@ apiV1.get('/env', (c) => {
       DATABASE_URL: {
         present: Boolean(databaseUrl),
         preview: redact(databaseUrl, { start: 10, end: 8 }),
+        full: allowFull ? databaseUrl ?? null : null,
       },
       DB_HOST: process.env.DB_HOST ?? null,
       DB_PORT: process.env.DB_PORT ?? null,
@@ -100,8 +107,20 @@ apiV1.get('/env', (c) => {
         preview: redact(process.env.ALIADO_BEARER_TOKEN?.trim()),
       },
       ENABLE_ENV_DEBUG: process.env.ENABLE_ENV_DEBUG ?? null,
+      ALLOW_ENV_FULL: process.env.ALLOW_ENV_FULL ?? null,
     },
   });
+});
+
+apiV1.get('/db/ping', async (c) => {
+  try {
+    const result = await db.query('SELECT 1 as ok');
+    return c.json({ success: true, ok: true, result: result.rows?.[0] ?? null });
+  } catch (err) {
+    console.error('DB ping failed:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    return c.json({ success: false, ok: false, error: 'DB ping failed', message }, 500);
+  }
 });
 
 // Redirect root /api/v1 to documentation

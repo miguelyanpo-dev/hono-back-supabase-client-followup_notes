@@ -8,7 +8,15 @@ const requiredEnv = (name: string) => {
   return value;
 };
 
-const databaseUrl = process.env.DATABASE_URL?.trim();
+let localDatabaseUrl: string | undefined;
+try {
+  const secrets = require('./secrets.local') as { LOCAL_DATABASE_URL?: string };
+  localDatabaseUrl = secrets.LOCAL_DATABASE_URL?.trim();
+} catch {
+  localDatabaseUrl = undefined;
+}
+
+const databaseUrl = process.env.DATABASE_URL?.trim() || localDatabaseUrl;
 
 export const db = new Pool(
   databaseUrl
