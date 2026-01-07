@@ -6,6 +6,7 @@ import { logger } from './middlewares/logger';
 import { config } from './config/config';
 import { db } from './config/db';
 import warrantiesRouter from './routes/warranties.routes';
+import { lookup } from 'node:dns/promises';
 
 const app = new Hono();
 const apiV1 = new OpenAPIHono();
@@ -113,13 +114,52 @@ apiV1.get('/env', (c) => {
 });
 
 apiV1.get('/db/ping', async (c) => {
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  let databaseHost: string | null = null;
+  let dnsLookup: unknown = null;
+  let dnsError: string | null = null;
+  if (databaseUrl) {
+    try {
+      databaseHost = new URL(databaseUrl).hostname;
+      dnsLookup = await lookup(databaseHost, { all: true });
+      dnsError = null;
+    } catch (err) {
+      databaseHost = null;
+      dnsLookup = null;
+      dnsError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
   try {
     const result = await db.query('SELECT 1 as ok');
-    return c.json({ success: true, ok: true, result: result.rows?.[0] ?? null });
+    return c.json({
+      success: true,
+      ok: true,
+      result: result.rows?.[0] ?? null,
+      diagnostics: {
+        vercelEnv: process.env.VERCEL_ENV ?? null,
+        vercelRegion: process.env.VERCEL_REGION ?? null,
+        databaseHost,
+        dnsLookup,
+        dnsError,
+      },
+    });
   } catch (err) {
     console.error('DB ping failed:', err);
     const message = err instanceof Error ? err.message : String(err);
-    return c.json({ success: false, ok: false, error: 'DB ping failed', message }, 500);
+    return c.json({
+      success: false,
+      ok: false,
+      error: 'DB ping failed',
+      message,
+      diagnostics: {
+        vercelEnv: process.env.VERCEL_ENV ?? null,
+        vercelRegion: process.env.VERCEL_REGION ?? null,
+        databaseHost,
+        dnsLookup,
+        dnsError,
+      },
+    }, 500);
   }
 });
 
