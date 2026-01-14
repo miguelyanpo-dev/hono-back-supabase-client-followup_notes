@@ -76,7 +76,19 @@ export const GetWarrantiesQuerySchema = z.object({
   customer_identification: z.union([z.string(), z.number()]).optional(),
   seller_id: z.string().optional(),
   status: z.string().optional(),
-  is_active: z.coerce.boolean().optional(),
+  is_active: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null) return undefined;
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'string') {
+        const lower = val.toLowerCase();
+        if (lower === 'true') return true;
+        if (lower === 'false') return false;
+      }
+      return undefined;
+    },
+    z.boolean().optional()
+  ),
 
   date_start: z.string().optional(), // ISO
   date_end: z.string().optional(),   // ISO
