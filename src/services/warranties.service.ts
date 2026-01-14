@@ -23,6 +23,7 @@ export class WarrantiesService {
       customer_identification?: string | number;
       seller_id?: string;
       status?: string;
+      is_active?: boolean;
       date_start?: string;
       date_end?: string;
     }
@@ -48,6 +49,11 @@ export class WarrantiesService {
     if (filters.status) {
       values.push(filters.status);
       where.push(`status = $${values.length}`);
+    }
+
+    if (filters.is_active !== undefined) {
+      values.push(filters.is_active);
+      where.push(`is_active = $${values.length}`);
     }
 
     if (filters.date_start) {

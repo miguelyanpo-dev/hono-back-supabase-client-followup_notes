@@ -35,6 +35,7 @@ export const getWarranties = async (c: Context) => {
     customer_identification: parsed.data.customer_identification,
     seller_id: parsed.data.seller_id,
     status: parsed.data.status,
+    is_active: parsed.data.is_active,
     date_start: parsed.data.date_start,
     date_end: parsed.data.date_end,
   });
