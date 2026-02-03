@@ -44,9 +44,16 @@ export const GetClientFollowupNotesQuerySchema = z.object({
   ref: z.string().min(1, 'ref is required'),
 
   page: z.union([z.string(), z.number()]).optional(),
-  limit: z.union([z.string(), z.number()]).optional(),
+  limit: z.union([z.string(), z.number()]).optional().refine(
+    (val) => {
+      if (val === undefined) return true;
+      const num = typeof val === 'string' ? parseInt(val, 10) : val;
+      return num >= 1 && num <= 1000;
+    },
+    { message: 'Limit must be between 1 and 1000' }
+  ),
 
-  client_id: z.string().optional(),
+  client_id: z.union([z.string(), z.array(z.string())]).optional(),
   tag: z.string().optional(),
   created_by_user_id: z.string().optional(),
 

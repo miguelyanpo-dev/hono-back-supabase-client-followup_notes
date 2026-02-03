@@ -19,7 +19,7 @@ export class ClientFollowupNotesService {
     filters: {
       page: number;
       limit: number;
-      client_id?: string;
+      client_id?: string | string[];
       tag?: string;
       created_by_user_id?: string;
       date_start?: string;
@@ -30,8 +30,13 @@ export class ClientFollowupNotesService {
     const values: any[] = [];
 
     if (filters.client_id) {
-      values.push(filters.client_id);
-      where.push(`client_id = $${values.length}`);
+      if (Array.isArray(filters.client_id)) {
+        values.push(filters.client_id);
+        where.push(`client_id = ANY($${values.length})`);
+      } else {
+        values.push(filters.client_id);
+        where.push(`client_id = $${values.length}`);
+      }
     }
 
     if (filters.tag) {
@@ -71,7 +76,7 @@ export class ClientFollowupNotesService {
       SELECT *
       FROM client_followup_notes
       ${whereSql}
-      ORDER BY created_at DESC
+      ORDER BY updated_at DESC, created_at DESC
       LIMIT $${valuesWithPaging.length - 1}
       OFFSET $${valuesWithPaging.length}
     `;
