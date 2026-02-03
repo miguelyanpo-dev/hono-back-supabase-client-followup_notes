@@ -42,7 +42,7 @@ Tu archivo `.env` debería verse así:
 # Server Configuration
 PORT=3001
 NODE_ENV=development
-PRODUCTION_URL=https://hono-back-aliado-garantias.vercel.app
+PRODUCTION_URL=https://hono-back-supabase-client-followup.vercel.app
 
 # CORS Configuration
 CORS_ORIGIN=*
