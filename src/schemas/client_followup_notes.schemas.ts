@@ -53,7 +53,8 @@ export const GetClientFollowupNotesQuerySchema = z.object({
     { message: 'Limit must be between 1 and 1000' }
   ),
 
-  client_id: z.union([z.string(), z.array(z.string())]).optional(),
+  client_id: z.string().optional(),
+  clients_ids: z.array(z.string()).optional(),
   tag: z.string().optional(),
   created_by_user_id: z.string().optional(),
 
