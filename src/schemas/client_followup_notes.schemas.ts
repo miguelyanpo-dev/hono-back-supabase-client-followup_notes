@@ -54,7 +54,7 @@ export const GetClientFollowupNotesQuerySchema = z.object({
   ),
 
   client_id: z.string().optional(),
-  clients_ids: z.array(z.string()).optional(),
+  clients_ids: z.union([z.string(), z.array(z.string())]).optional(),
   tag: z.string().optional(),
   created_by_user_id: z.string().optional(),
 
