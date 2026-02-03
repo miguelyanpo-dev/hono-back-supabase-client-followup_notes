@@ -28,7 +28,7 @@ export const getClientFollowupNotes = async (c: Context) => {
     page,
     limit,
     client_id: parsed.data.client_id,
-    clients_ids: parsed.data.clients_ids,
+    clients_ids: parsed.data.clients_ids ? (Array.isArray(parsed.data.clients_ids) ? parsed.data.clients_ids : [parsed.data.clients_ids]) : undefined,
     tag: parsed.data.tag,
     created_by_user_id: parsed.data.created_by_user_id,
     date_start: parsed.data.date_start,
