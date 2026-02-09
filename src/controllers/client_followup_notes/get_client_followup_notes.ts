@@ -15,7 +15,7 @@ export const getClientFollowupNotes = async (c: Context) => {
   
   // Convert clients_ids from comma-separated string to array if needed
   if (query.clients_ids && typeof query.clients_ids === 'string') {
-    (query as any).clients_ids = query.clients_ids.split(',');
+    (query as any).clients_ids = query.clients_ids.split(',').map(id => id.trim());
   }
   
   const parsed = GetClientFollowupNotesQuerySchema.safeParse(query);
