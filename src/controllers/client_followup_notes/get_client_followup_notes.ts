@@ -28,7 +28,7 @@ export const getClientFollowupNotes = async (c: Context) => {
   }
 
   const page = Number(parsed.data.page ?? 1);
-  const limit = Number(parsed.data.limit ?? 10);
+  const limit = Number(parsed.data.limit ?? 1000);
 
   const filters = {
     page,
