@@ -24,6 +24,7 @@ export class ClientFollowupNotesService {
       tag?: string;
       created_by_user_id?: string;
       created_by_user_email?: string;
+      client_name?: string;
       date_start?: string;
       date_end?: string;
     }
@@ -54,6 +55,11 @@ export class ClientFollowupNotesService {
     if (filters.created_by_user_email) {
       values.push(filters.created_by_user_email);
       where.push(`created_by_user_email = $${values.length}`);
+    }
+
+    if (filters.client_name) {
+      values.push(`%${filters.client_name}%`);
+      where.push(`client_name ILIKE $${values.length}`);
     }
 
     if (filters.date_start) {
@@ -111,6 +117,7 @@ export class ClientFollowupNotesService {
         tag,
         file_url,
         client_id,
+        client_name,
         created_by_user_id,
         created_by_user_name,
         created_by_user_image,
@@ -120,9 +127,9 @@ export class ClientFollowupNotesService {
         updated_by_user_image
       )
       VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9,
-        $6, $7, $8
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10,
+        $7, $8, $9
       )
       RETURNING *
       `,
@@ -132,6 +139,7 @@ export class ClientFollowupNotesService {
         data.tag ?? null,
         data.file_url ?? null,
         data.client_id,
+        data.client_name,
         data.created_by_user_id,
         data.created_by_user_name,
         data.created_by_user_image ?? null,
