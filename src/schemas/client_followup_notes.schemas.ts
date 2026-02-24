@@ -16,6 +16,7 @@ export const CreateClientFollowupNoteSchema = z.object({
   created_by_user_id: z.string().min(1, 'Created by user ID is required'),
   created_by_user_name: z.string().min(1, 'Created by user name is required'),
   created_by_user_image: z.string().optional().nullable(),
+  created_by_user_email: z.string().optional().nullable(),
 });
 
 /**
@@ -57,6 +58,7 @@ export const GetClientFollowupNotesQuerySchema = z.object({
   clients_ids: z.union([z.string(), z.array(z.string())]).optional(),
   tag: z.string().optional(),
   created_by_user_id: z.string().optional(),
+  created_by_user_email: z.string().optional(),
 
   date_start: z.string().optional(), // ISO
   date_end: z.string().optional(),   // ISO

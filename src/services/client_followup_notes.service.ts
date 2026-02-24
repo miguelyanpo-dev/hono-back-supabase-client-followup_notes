@@ -23,6 +23,7 @@ export class ClientFollowupNotesService {
       clients_ids?: string[];
       tag?: string;
       created_by_user_id?: string;
+      created_by_user_email?: string;
       date_start?: string;
       date_end?: string;
     }
@@ -48,6 +49,11 @@ export class ClientFollowupNotesService {
     if (filters.created_by_user_id) {
       values.push(filters.created_by_user_id);
       where.push(`created_by_user_id = $${values.length}`);
+    }
+
+    if (filters.created_by_user_email) {
+      values.push(filters.created_by_user_email);
+      where.push(`created_by_user_email = $${values.length}`);
     }
 
     if (filters.date_start) {
@@ -108,13 +114,14 @@ export class ClientFollowupNotesService {
         created_by_user_id,
         created_by_user_name,
         created_by_user_image,
+        created_by_user_email,
         updated_by_user_id,
         updated_by_user_name,
         updated_by_user_image
       )
       VALUES (
         $1, $2, $3, $4, $5,
-        $6, $7, $8,
+        $6, $7, $8, $9,
         $6, $7, $8
       )
       RETURNING *
@@ -128,6 +135,7 @@ export class ClientFollowupNotesService {
         data.created_by_user_id,
         data.created_by_user_name,
         data.created_by_user_image ?? null,
+        data.created_by_user_email ?? null,
       ]
     );
 
