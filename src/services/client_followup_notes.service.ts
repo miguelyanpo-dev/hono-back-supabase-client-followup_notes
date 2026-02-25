@@ -284,9 +284,15 @@ rows.forEach(row => {
   map.set(rowDateStr, parseInt(row.total));
 });
 
+// Mes abreviado
 const monthShort = [
   'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
   'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+];
+
+// Día abreviado
+const dayShort = [
+  'Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'
 ];
 
 for (let i = 0; i < 30; i++) {
@@ -296,12 +302,13 @@ for (let i = 0; i < 30; i++) {
   const dateStr = date.toISOString().split('T')[0];
   const total = map.get(dateStr) ?? 0;
 
-  if (i === 0) {
-    stats["Hoy"] = total;
-  } else {
-    const label = `${monthShort[date.getMonth()]} ${date.getDate()}`;
-    stats[label] = total;
-  }
+  const dayName = dayShort[date.getDay()];
+  const monthName = monthShort[date.getMonth()];
+  const dayNumber = date.getDate();
+
+  const label = `${dayName}-${monthName}-${dayNumber}`;
+
+  stats[label] = total;
 }
 
 return stats;
