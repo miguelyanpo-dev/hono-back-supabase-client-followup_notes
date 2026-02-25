@@ -319,7 +319,14 @@ router.openapi(
     method: 'get',
     path: '/stats',
     request: {
-      query: GetClientFollowupNotesQuerySchema,
+      query: z.object({
+        ref: z.string().optional(),
+        client_id: z.string().optional(),
+        clients_ids: z.union([z.string(), z.array(z.string())]).optional(),
+        tag: z.string().optional(),
+        created_by_user_email: z.string().optional(),
+        client_name: z.string().optional(),
+      }),
     },
     responses: {
       200: {
