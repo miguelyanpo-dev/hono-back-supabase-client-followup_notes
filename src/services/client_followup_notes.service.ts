@@ -272,8 +272,8 @@ export class ClientFollowupNotesService {
   const { rows } = await db.query(query, values);
 
   const stats: any = {};
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
 // Convertimos resultados a mapa
 const map = new Map<string, number>();
@@ -284,12 +284,24 @@ rows.forEach(row => {
   map.set(rowDateStr, parseInt(row.total));
 });
 
+const monthShort = [
+  'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+  'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+];
+
 for (let i = 0; i < 30; i++) {
   const date = new Date(today);
   date.setDate(today.getDate() - i);
-  const dateStr = date.toISOString().split('T')[0];
 
-  stats[`TotalDia${30 - i}`] = map.get(dateStr) ?? 0;
+  const dateStr = date.toISOString().split('T')[0];
+  const total = map.get(dateStr) ?? 0;
+
+  if (i === 0) {
+    stats["Hoy"] = total;
+  } else {
+    const label = `${monthShort[date.getMonth()]} ${date.getDate()}`;
+    stats[label] = total;
+  }
 }
 
 return stats;
@@ -357,14 +369,15 @@ return stats;
   ];
 
   monthNames.forEach(month => {
-    stats[`Total${month}`] = 0;
-  });
+  stats[month] = 0;
+});
 
-  rows.forEach(row => {
-    const monthIndex = parseInt(row.month) - 1;
-    const monthName = monthNames[monthIndex];
-    stats[`Total${monthName}`] = parseInt(row.total);
-  });
+// Actualizar con valores reales
+rows.forEach(row => {
+  const monthIndex = parseInt(row.month) - 1;
+  const monthName = monthNames[monthIndex];
+  stats[monthName] = parseInt(row.total);
+});
 
   return stats;
 }
