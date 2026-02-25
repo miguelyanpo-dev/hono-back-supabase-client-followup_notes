@@ -5,6 +5,7 @@ import { createClientFollowupNote } from '../controllers/client_followup_notes/c
 import { getClientFollowupNoteById } from '../controllers/client_followup_notes/get_client_followup_note_by_id';
 import { updateClientFollowupNote } from '../controllers/client_followup_notes/update_client_followup_note';
 import { deleteClientFollowupNote } from '../controllers/client_followup_notes/delete_client_followup_note';
+import { getClientFollowupNotesStats } from '../controllers/client_followup_notes/get_client_followup_notes_stats';
 import {
   CreateClientFollowupNoteSchema,
   GetClientFollowupNotesQuerySchema,
@@ -311,6 +312,49 @@ router.openapi(
     },
   }),
   deleteClientFollowupNote as any
+);
+
+router.openapi(
+  createRoute({
+    method: 'get',
+    path: '/stats',
+    request: {
+      query: GetClientFollowupNotesQuerySchema,
+    },
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.boolean(),
+              data: z.object({
+                daily: z.record(z.string(), z.number()),
+                monthly: z.record(z.string(), z.number()),
+              }),
+            }),
+          },
+        },
+        description: 'Get client followup notes statistics',
+      },
+      400: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Bad Request',
+      },
+      500: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Internal Server Error',
+      },
+    },
+  }),
+  getClientFollowupNotesStats as any
 );
 
 export default router;
