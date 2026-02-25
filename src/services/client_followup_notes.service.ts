@@ -216,151 +216,150 @@ export class ClientFollowupNotesService {
 
   // Obtener estadísticas de notas por día (últimos 30 días)
   static async getDailyStats(
-    db: Pool,
-    filters: {
-      client_id?: string;
-      clients_ids?: string[];
-      tag?: string;
-      created_by_user_email?: string;
-      client_name?: string;
-    }
-  ) {
-    const where: string[] = [];
-    const values: any[] = [];
+  db: Pool,
+  filters: {
+    client_id?: string;
+    clients_ids?: string[];
+    tag?: string;
+    created_by_user_email?: string;
+    client_name?: string;
+  }
+) {
+  const where: string[] = [];
+  const values: any[] = [];
 
-    if (filters.client_id) {
-      values.push(filters.client_id);
-      where.push(`client_id = $${values.length}`);
-    }
-
-    if (filters.clients_ids && filters.clients_ids.length > 0) {
-      values.push(filters.clients_ids);
-      where.push(`client_id = ANY($${values.length})`);
-    }
-
-    if (filters.tag) {
-      values.push(`%${filters.tag}%`);
-      where.push(`tag ILIKE $${values.length}`);
-    }
-
-    if (filters.created_by_user_email) {
-      values.push(filters.created_by_user_email);
-      where.push(`created_by_user_email = $${values.length}`);
-    }
-
-    if (filters.client_name) {
-      values.push(`%${filters.client_name}%`);
-      where.push(`client_name ILIKE $${values.length}`);
-    }
-
-    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-    const query = `
-      SELECT 
-        DATE(created_at) as date,
-        COUNT(*) as total
-      FROM client_followup_notes
-      ${whereSql}
-      AND created_at >= CURRENT_DATE - INTERVAL '29 days'
-      AND created_at < CURRENT_DATE + INTERVAL '1 day'
-      GROUP BY DATE(created_at)
-      ORDER BY date DESC
-    `;
-
-    const { rows } = await db.query(query, values);
-    
-    // Construir el objeto de respuesta con TotalDia30 hasta TotalDia1
-    const stats: any = {};
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      const dayData = rows.find(row => row.date === dateStr);
-      const total = dayData ? parseInt(dayData.total) : 0;
-      
-      stats[`TotalDia${30 - i}`] = total;
-    }
-
-    return stats;
+  if (filters.client_id) {
+    values.push(filters.client_id);
+    where.push(`client_id = $${values.length}`);
   }
 
+  if (filters.clients_ids && filters.clients_ids.length > 0) {
+    values.push(filters.clients_ids);
+    where.push(`client_id = ANY($${values.length})`);
+  }
+
+  if (filters.tag) {
+    values.push(`%${filters.tag}%`);
+    where.push(`tag ILIKE $${values.length}`);
+  }
+
+  if (filters.created_by_user_email) {
+    values.push(filters.created_by_user_email);
+    where.push(`created_by_user_email = $${values.length}`);
+  }
+
+  if (filters.client_name) {
+    values.push(`%${filters.client_name}%`);
+    where.push(`client_name ILIKE $${values.length}`);
+  }
+
+  // 🔥 SIEMPRE agregamos el filtro de fecha al array
+  where.push(`created_at >= CURRENT_DATE - INTERVAL '29 days'`);
+  where.push(`created_at < CURRENT_DATE + INTERVAL '1 day'`);
+
+  const whereSql = `WHERE ${where.join(' AND ')}`;
+
+  const query = `
+    SELECT 
+      DATE(created_at) as date,
+      COUNT(*) as total
+    FROM client_followup_notes
+    ${whereSql}
+    GROUP BY DATE(created_at)
+    ORDER BY date DESC
+  `;
+
+  const { rows } = await db.query(query, values);
+
+  const stats: any = {};
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+
+    const dayData = rows.find(row => row.date === dateStr);
+    const total = dayData ? parseInt(dayData.total) : 0;
+
+    stats[`TotalDia${30 - i}`] = total;
+  }
+
+  return stats;
+}
   // Obtener estadísticas mensuales del año actual
   static async getMonthlyStats(
-    db: Pool,
-    filters: {
-      client_id?: string;
-      clients_ids?: string[];
-      tag?: string;
-      created_by_user_email?: string;
-      client_name?: string;
-    }
-  ) {
-    const where: string[] = [];
-    const values: any[] = [];
-
-    if (filters.client_id) {
-      values.push(filters.client_id);
-      where.push(`client_id = $${values.length}`);
-    }
-
-    if (filters.clients_ids && filters.clients_ids.length > 0) {
-      values.push(filters.clients_ids);
-      where.push(`client_id = ANY($${values.length})`);
-    }
-
-    if (filters.tag) {
-      values.push(`%${filters.tag}%`);
-      where.push(`tag ILIKE $${values.length}`);
-    }
-
-    if (filters.created_by_user_email) {
-      values.push(filters.created_by_user_email);
-      where.push(`created_by_user_email = $${values.length}`);
-    }
-
-    if (filters.client_name) {
-      values.push(`%${filters.client_name}%`);
-      where.push(`client_name ILIKE $${values.length}`);
-    }
-
-    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
-    const query = `
-      SELECT 
-        EXTRACT(MONTH FROM created_at) as month,
-        COUNT(*) as total
-      FROM client_followup_notes
-      ${whereSql}
-      AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
-      GROUP BY EXTRACT(MONTH FROM created_at)
-      ORDER BY month
-    `;
-
-    const { rows } = await db.query(query, values);
-    
-    // Construir el objeto de respuesta con TotalEnero hasta TotalDiciembre
-    const stats: any = {};
-    const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-
-    // Inicializar todos los meses en 0
-    monthNames.forEach(month => {
-      stats[`Total${month}`] = 0;
-    });
-
-    // Actualizar con los valores reales
-    rows.forEach(row => {
-      const monthIndex = parseInt(row.month) - 1;
-      const monthName = monthNames[monthIndex];
-      stats[`Total${monthName}`] = parseInt(row.total);
-    });
-
-    return stats;
+  db: Pool,
+  filters: {
+    client_id?: string;
+    clients_ids?: string[];
+    tag?: string;
+    created_by_user_email?: string;
+    client_name?: string;
   }
+) {
+  const where: string[] = [];
+  const values: any[] = [];
+
+  if (filters.client_id) {
+    values.push(filters.client_id);
+    where.push(`client_id = $${values.length}`);
+  }
+
+  if (filters.clients_ids && filters.clients_ids.length > 0) {
+    values.push(filters.clients_ids);
+    where.push(`client_id = ANY($${values.length})`);
+  }
+
+  if (filters.tag) {
+    values.push(`%${filters.tag}%`);
+    where.push(`tag ILIKE $${values.length}`);
+  }
+
+  if (filters.created_by_user_email) {
+    values.push(filters.created_by_user_email);
+    where.push(`created_by_user_email = $${values.length}`);
+  }
+
+  if (filters.client_name) {
+    values.push(`%${filters.client_name}%`);
+    where.push(`client_name ILIKE $${values.length}`);
+  }
+
+  // 🔥 Filtro del año SIEMPRE dentro del array
+  where.push(`EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)`);
+
+  const whereSql = `WHERE ${where.join(' AND ')}`;
+
+  const query = `
+    SELECT 
+      EXTRACT(MONTH FROM created_at) as month,
+      COUNT(*) as total
+    FROM client_followup_notes
+    ${whereSql}
+    GROUP BY EXTRACT(MONTH FROM created_at)
+    ORDER BY month
+  `;
+
+  const { rows } = await db.query(query, values);
+
+  const stats: any = {};
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  monthNames.forEach(month => {
+    stats[`Total${month}`] = 0;
+  });
+
+  rows.forEach(row => {
+    const monthIndex = parseInt(row.month) - 1;
+    const monthName = monthNames[monthIndex];
+    stats[`Total${monthName}`] = parseInt(row.total);
+  });
+
+  return stats;
+}
 }
