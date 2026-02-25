@@ -63,52 +63,6 @@ router.openapi(
 
 router.openapi(
   createRoute({
-    method: 'get',
-    path: '/{id}',
-    request: {
-      params: IdParamSchema,
-      query: RefQuerySchema,
-    },
-    responses: {
-      200: {
-        content: {
-          'application/json': {
-            schema: SuccessResponse,
-          },
-        },
-        description: 'Get client followup note by id',
-      },
-      400: {
-        content: {
-          'application/json': {
-            schema: ErrorResponse,
-          },
-        },
-        description: 'Bad Request',
-      },
-      404: {
-        content: {
-          'application/json': {
-            schema: ErrorResponse,
-          },
-        },
-        description: 'Not Found',
-      },
-      500: {
-        content: {
-          'application/json': {
-            schema: ErrorResponse,
-          },
-        },
-        description: 'Internal Server Error',
-      },
-    },
-  }),
-  getClientFollowupNoteById as any
-);
-
-router.openapi(
-  createRoute({
     method: 'post',
     path: '/',
     request: {
@@ -149,6 +103,56 @@ router.openapi(
     },
   }),
   createClientFollowupNote as any
+);
+
+router.openapi(
+  createRoute({
+    method: 'get',
+    path: '/stats',
+    request: {
+      query: z.object({
+        ref: z.string().optional(),
+        client_id: z.string().optional(),
+        clients_ids: z.union([z.string(), z.array(z.string())]).optional(),
+        tag: z.string().optional(),
+        created_by_user_email: z.string().optional(),
+        client_name: z.string().optional(),
+      }),
+    },
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: z.object({
+              success: z.boolean(),
+              data: z.object({
+                daily: z.record(z.string(), z.number()),
+                monthly: z.record(z.string(), z.number()),
+              }),
+            }),
+          },
+        },
+        description: 'Get client followup notes statistics',
+      },
+      400: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Bad Request',
+      },
+      500: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Internal Server Error',
+      },
+    },
+  }),
+  getClientFollowupNotesStats as any
 );
 
 router.openapi(
@@ -317,31 +321,19 @@ router.openapi(
 router.openapi(
   createRoute({
     method: 'get',
-    path: '/stats',
+    path: '/{id}',
     request: {
-      query: z.object({
-        ref: z.string().optional(),
-        client_id: z.string().optional(),
-        clients_ids: z.union([z.string(), z.array(z.string())]).optional(),
-        tag: z.string().optional(),
-        created_by_user_email: z.string().optional(),
-        client_name: z.string().optional(),
-      }),
+      params: IdParamSchema,
+      query: RefQuerySchema,
     },
     responses: {
       200: {
         content: {
           'application/json': {
-            schema: z.object({
-              success: z.boolean(),
-              data: z.object({
-                daily: z.record(z.string(), z.number()),
-                monthly: z.record(z.string(), z.number()),
-              }),
-            }),
+            schema: SuccessResponse,
           },
         },
-        description: 'Get client followup notes statistics',
+        description: 'Get client followup note by id',
       },
       400: {
         content: {
@@ -350,6 +342,14 @@ router.openapi(
           },
         },
         description: 'Bad Request',
+      },
+      404: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Not Found',
       },
       500: {
         content: {
@@ -361,7 +361,7 @@ router.openapi(
       },
     },
   }),
-  getClientFollowupNotesStats as any
+  getClientFollowupNoteById as any
 );
 
 export default router;
