@@ -275,18 +275,24 @@ export class ClientFollowupNotesService {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  for (let i = 0; i < 30; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
+// Convertimos resultados a mapa
+const map = new Map<string, number>();
 
-    const dayData = rows.find(row => row.date === dateStr);
-    const total = dayData ? parseInt(dayData.total) : 0;
+rows.forEach(row => {
+  const rowDate = new Date(row.date);
+  const rowDateStr = rowDate.toISOString().split('T')[0];
+  map.set(rowDateStr, parseInt(row.total));
+});
 
-    stats[`TotalDia${30 - i}`] = total;
-  }
+for (let i = 0; i < 30; i++) {
+  const date = new Date(today);
+  date.setDate(today.getDate() - i);
+  const dateStr = date.toISOString().split('T')[0];
 
-  return stats;
+  stats[`TotalDia${30 - i}`] = map.get(dateStr) ?? 0;
+}
+
+return stats;
 }
   // Obtener estadísticas mensuales del año actual
   static async getMonthlyStats(
